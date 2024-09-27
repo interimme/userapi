@@ -7,10 +7,8 @@ Scalable and maintainable RESTful API built with Go and PostgreSQL following Cle
 - [Features](#features)
 - [Architecture](#architecture)
 - [Technologies Used](#technologies-used)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-  - [Running the Application](#running-the-application)
+- [Installation](#installation)
+- [Running the Application](#running-the-application)
 - [Usage](#usage)
   - [API Endpoints](#api-endpoints)
 - [Testing](#testing)
@@ -204,6 +202,112 @@ curl -X DELETE http://localhost:8080/user/{user-id}
   ```json
   {
     "message": "User deleted successfully"
+  }
+  ```
+
+---
+
+## Error Handling
+
+**UserAPI** implements comprehensive error handling to provide consistent and meaningful error responses to clients. The application uses custom error types and middleware to manage errors uniformly across all layers.
+
+### Custom Error Types
+
+- **AppError**: A custom error type that includes an HTTP status code and an error message.
+
+  ```go
+  type AppError struct {
+      Code    int    // HTTP status code
+      Message string // Error message
+  }
+  ```
+
+- **Predefined Errors**: Common application errors are predefined with standard HTTP status codes, such as `ErrBadRequest`, `ErrNotFound`, `ErrInternalServerError`, etc.
+
+### Error Handling Middleware
+
+- **Middleware**: An error handling middleware is implemented using Gin's middleware mechanism. It intercepts errors passed through the context and sends a consistent JSON response.
+
+  ```go
+  func ErrorHandler(c *gin.Context) {
+      c.Next() // Execute the handlers
+
+      // Check if any errors were set during the request
+      if len(c.Errors) > 0 {
+          // Retrieve the last error
+          err := c.Errors.Last().Err
+
+          // Check if it's an AppError
+          if appErr, ok := err.(*errors.AppError); ok {
+              c.JSON(appErr.Code, gin.H{"error": appErr.Message})
+              return
+          }
+
+          // For other errors, return a generic 500 error
+          c.JSON(500, gin.H{"error": "Internal server error"})
+      }
+  }
+  ```
+
+- **Usage**: The middleware is applied to the router, ensuring that all errors are handled consistently.
+
+  ```go
+  router := gin.Default()
+  router.Use(middleware.ErrorHandler)
+  ```
+
+### Error Propagation
+
+- **Controllers**: In controller methods, errors are passed to the middleware using `c.Error(err)`, and successful responses use `c.JSON`.
+
+  ```go
+  if err := ctrl.UserUseCase.CreateUser(&user); err != nil {
+      c.Error(err)
+      return
+  }
+  ```
+
+- **Use Cases**: Use cases return `AppError` instances with appropriate status codes and messages.
+
+  ```go
+  if err := user.Validate(); err != nil {
+      return &errors.AppError{Code: http.StatusBadRequest, Message: err.Error()}
+  }
+  ```
+
+- **Repositories**: Errors from the repository layer are wrapped or converted into `AppError` instances as needed.
+
+### Example Error Responses
+
+- **400 Bad Request**: When the client sends invalid data.
+
+  ```json
+  {
+    "error": "Invalid UUID"
+  }
+  ```
+
+- **404 Not Found**: When a requested resource does not exist.
+
+  ```json
+  {
+    "error": "Resource not found"
+  }
+  ```
+
+- **409 Conflict**: When there is a conflict, such as trying to create a user with an email that already exists.
+
+  ```json
+  {
+    "error": "Email already exists"
+  }
+  ```
+
+- **500 Internal Server Error**: For unexpected errors on the server side.
+
+  ```json
+  {
+    "error": "Internal server error"
   }
   ```
 
