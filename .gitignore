@@ -1,5 +1,7 @@
 /userapi
 
+.idea/
+
 *.log
 
 vendor/
