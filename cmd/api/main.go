@@ -19,7 +19,7 @@ func main() {
 		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
 		getEnv("DB_HOST", "localhost"),
 		getEnv("DB_USER", "postgres"),
-		getEnv("DB_PASSWORD", "postgres"),
+		getEnv("DB_PASSWORD", "postgres"), // TODO: Manage sensitive info with Docker Secrets or setting .env variables in CI/CD tool
 		getEnv("DB_NAME", "usersdb"),
 		getEnv("DB_PORT", "5432"),
 	)

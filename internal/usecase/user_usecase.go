@@ -2,8 +2,11 @@ package usecase
 
 import (
 	"errors"
+	"gorm.io/gorm"
+	"net/http"
 	"time"
 	"userapi/internal/entity"
+	appErrors "userapi/internal/errors"
 
 	"github.com/google/uuid"
 )
@@ -45,35 +48,47 @@ func (uc *userUseCase) CreateUser(user *entity.User) error {
 
 	// Validate the user entity
 	if err := user.Validate(); err != nil {
-		return err
+		return &appErrors.AppError{Code: http.StatusBadRequest, Message: err.Error()}
 	}
 
 	// Check if the email already exists
 	existingUser, _ := uc.repo.GetByEmail(user.Email)
 	if existingUser != nil {
-		return errors.New("email already exists")
+		return &appErrors.AppError{Code: http.StatusConflict, Message: "Email already exists"}
 	}
 
 	// Create the user in the repository
-	return uc.repo.Create(user)
+	if err := uc.repo.Create(user); err != nil {
+		return &appErrors.AppError{Code: http.StatusInternalServerError, Message: "Failed to create user"}
+	}
+
+	return nil
 }
 
-// GetUser retrieves a user by ID
 func (uc *userUseCase) GetUser(id uuid.UUID) (*entity.User, error) {
-	return uc.repo.GetByID(id)
+	user, err := uc.repo.GetByID(id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, appErrors.ErrNotFound
+		}
+		return nil, appErrors.ErrInternalServerError
+	}
+	return user, nil
 }
 
-// UpdateUser updates an existing user's information
 func (uc *userUseCase) UpdateUser(user *entity.User) error {
 	// Validate the user entity
 	if err := user.Validate(); err != nil {
-		return err
+		return &appErrors.AppError{Code: http.StatusBadRequest, Message: err.Error()}
 	}
 
 	// Retrieve the existing user
 	existingUser, err := uc.repo.GetByID(user.ID)
 	if err != nil {
-		return errors.New("user not found")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return appErrors.ErrNotFound
+		}
+		return appErrors.ErrInternalServerError
 	}
 
 	// Update the user's information
@@ -83,14 +98,25 @@ func (uc *userUseCase) UpdateUser(user *entity.User) error {
 	existingUser.Age = user.Age
 
 	// Save the updated user
-	return uc.repo.Update(existingUser)
+	if err := uc.repo.Update(existingUser); err != nil {
+		return appErrors.ErrInternalServerError
+	}
+
+	return nil
 }
 
-// DeleteUser removes a user from the repository
 func (uc *userUseCase) DeleteUser(id uuid.UUID) error {
 	user, err := uc.repo.GetByID(id)
 	if err != nil {
-		return errors.New("user not found")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return appErrors.ErrNotFound
+		}
+		return appErrors.ErrInternalServerError
 	}
-	return uc.repo.Delete(user)
+
+	if err := uc.repo.Delete(user); err != nil {
+		return appErrors.ErrInternalServerError
+	}
+
+	return nil
 }

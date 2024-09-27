@@ -2,6 +2,7 @@ package infrastructure
 
 import (
 	"userapi/internal/controller"
+	"userapi/internal/infrastructure/middleware"
 	"userapi/internal/infrastructure/persistence"
 	"userapi/internal/usecase"
 
@@ -12,6 +13,9 @@ import (
 // NewRouter initializes the Gin router with routes and handlers
 func NewRouter(db *gorm.DB) *gin.Engine {
 	router := gin.Default()
+
+	// Apply the error handling middleware
+	router.Use(middleware.ErrorHandler)
 
 	// Initialize the repository
 	userRepo := persistence.NewUserRepository(db)
