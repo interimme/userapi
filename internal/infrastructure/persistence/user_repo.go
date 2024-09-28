@@ -3,6 +3,7 @@ package persistence
 import (
 	"time"
 	"userapi/internal/entity"
+	"userapi/internal/usecase"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -10,80 +11,83 @@ import (
 
 // UserGorm represents the GORM model for the User entity
 type UserGorm struct {
-	ID        uuid.UUID `gorm:"type:uuid;primary_key;"`
+	ID        uuid.UUID `gorm:"type:uuid;primaryKey"`
 	Firstname string
 	Lastname  string
 	Email     string `gorm:"uniqueIndex"`
 	Age       uint
-	Created   time.Time
+	Created   int64
 }
 
-// UserRepository handles database operations for users
-type UserRepository struct {
+// ToEntity converts UserGorm to entity.User
+func (ug *UserGorm) ToEntity() *entity.User {
+	return &entity.User{
+		ID:        ug.ID,
+		Firstname: ug.Firstname,
+		Lastname:  ug.Lastname,
+		Email:     ug.Email,
+		Age:       ug.Age,
+		Created:   ug.CreatedTime(),
+	}
+}
+
+// FromEntity updates UserGorm fields from entity.User
+func (ug *UserGorm) FromEntity(user *entity.User) {
+	ug.ID = user.ID
+	ug.Firstname = user.Firstname
+	ug.Lastname = user.Lastname
+	ug.Email = user.Email
+	ug.Age = user.Age
+	ug.Created = user.Created.Unix()
+}
+
+// CreatedTime returns the Created field as time.Time
+func (ug *UserGorm) CreatedTime() time.Time {
+	return time.Unix(ug.Created, 0)
+}
+
+// userRepository implements the UserRepository interface
+type userRepository struct {
 	db *gorm.DB
 }
 
-// NewUserRepository creates a new UserRepository instance
-func NewUserRepository(db *gorm.DB) *UserRepository {
-	return &UserRepository{db}
+// NewUserRepository creates a new instance of UserRepository
+func NewUserRepository(db *gorm.DB) usecase.UserRepository {
+	return &userRepository{
+		db: db,
+	}
 }
 
-// Create inserts a new user into the database
-func (r *UserRepository) Create(user *entity.User) error {
-	userGorm := fromEntity(user)
-	return r.db.Create(&userGorm).Error
+func (r *userRepository) Create(user *entity.User) error {
+	ug := &UserGorm{}
+	ug.FromEntity(user)
+	return r.db.Create(ug).Error
 }
 
-// GetByID retrieves a user by ID
-func (r *UserRepository) GetByID(id uuid.UUID) (*entity.User, error) {
-	var userGorm UserGorm
-	if err := r.db.First(&userGorm, "id = ?", id).Error; err != nil {
+func (r *userRepository) GetByID(id uuid.UUID) (*entity.User, error) {
+	var ug UserGorm
+	if err := r.db.First(&ug, "id = ?", id).Error; err != nil {
 		return nil, err
 	}
-	return toEntity(&userGorm), nil
+	return ug.ToEntity(), nil
 }
 
-// GetByEmail retrieves a user by email
-func (r *UserRepository) GetByEmail(email string) (*entity.User, error) {
-	var userGorm UserGorm
-	if err := r.db.First(&userGorm, "email = ?", email).Error; err != nil {
+func (r *userRepository) GetByEmail(email string) (*entity.User, error) {
+	var ug UserGorm
+	if err := r.db.First(&ug, "email = ?", email).Error; err != nil {
 		return nil, err
 	}
-	return toEntity(&userGorm), nil
+	return ug.ToEntity(), nil
 }
 
-// Update modifies an existing user in the database
-func (r *UserRepository) Update(user *entity.User) error {
-	userGorm := fromEntity(user)
-	return r.db.Save(&userGorm).Error
+func (r *userRepository) Update(user *entity.User) error {
+	ug := &UserGorm{}
+	ug.FromEntity(user)
+	return r.db.Save(ug).Error
 }
 
-// Delete removes a user from the database
-func (r *UserRepository) Delete(user *entity.User) error {
-	userGorm := fromEntity(user)
-	return r.db.Delete(&userGorm).Error
-}
-
-// Helper function to convert from entity.User to UserGorm
-func fromEntity(user *entity.User) UserGorm {
-	return UserGorm{
-		ID:        user.ID,
-		Firstname: user.Firstname,
-		Lastname:  user.Lastname,
-		Email:     user.Email,
-		Age:       user.Age,
-		Created:   user.Created,
-	}
-}
-
-// Helper function to convert from UserGorm to entity.User
-func toEntity(userGorm *UserGorm) *entity.User {
-	return &entity.User{
-		ID:        userGorm.ID,
-		Firstname: userGorm.Firstname,
-		Lastname:  userGorm.Lastname,
-		Email:     userGorm.Email,
-		Age:       userGorm.Age,
-		Created:   userGorm.Created,
-	}
+func (r *userRepository) Delete(user *entity.User) error {
+	ug := &UserGorm{}
+	ug.FromEntity(user)
+	return r.db.Delete(ug).Error
 }

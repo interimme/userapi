@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"os"
 	"time"
 
 	"userapi/internal/infrastructure"
@@ -14,14 +13,14 @@ import (
 )
 
 func main() {
-	// Build the database connection string (DSN)
+	// Build the database connection string (DSN) with hardcoded values
 	dsn := fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
-		getEnv("DB_HOST", "localhost"),
-		getEnv("DB_USER", "postgres"),
-		getEnv("DB_PASSWORD", "postgres"), // TODO: Manage sensitive info with Docker Secrets or setting .env variables in CI/CD tool
-		getEnv("DB_NAME", "usersdb"),
-		getEnv("DB_PORT", "5432"),
+		"db",       // DB_HOST
+		"postgres", // DB_USER
+		"postgres", // DB_PASSWORD // TODO:
+		"usersdb",  // DB_NAME
+		"5432",     // DB_PORT
 	)
 
 	// Implement retry logic to wait for the database to be ready
@@ -50,14 +49,5 @@ func main() {
 	router := infrastructure.NewRouter(db)
 
 	// Start the server
-	port := getEnv("PORT", "8080")
-	router.Run(":" + port)
-}
-
-// Helper function to get environment variables with a default value
-func getEnv(key, defaultValue string) string {
-	if value, exists := os.LookupEnv(key); exists {
-		return value
-	}
-	return defaultValue
+	router.Run(":8080")
 }

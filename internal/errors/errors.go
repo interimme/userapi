@@ -13,11 +13,12 @@ func (e *AppError) Error() string {
 	return e.Message
 }
 
+// Predefined error instances
 var (
-	ErrBadRequest          = &AppError{Code: http.StatusBadRequest, Message: "Bad request"}
-	ErrUnauthorized        = &AppError{Code: http.StatusUnauthorized, Message: "Unauthorized"}
-	ErrForbidden           = &AppError{Code: http.StatusForbidden, Message: "Forbidden"}
-	ErrNotFound            = &AppError{Code: http.StatusNotFound, Message: "Resource not found"}
-	ErrConflict            = &AppError{Code: http.StatusConflict, Message: "Resource conflict"}
-	ErrInternalServerError = &AppError{Code: http.StatusInternalServerError, Message: "Internal server error"}
+	ErrBadRequest          = &AppError{Code: http.StatusBadRequest, Message: "bad request"}
+	ErrUnauthorized        = &AppError{Code: http.StatusUnauthorized, Message: "unauthorized"}
+	ErrForbidden           = &AppError{Code: http.StatusForbidden, Message: "forbidden"}
+	ErrNotFound            = &AppError{Code: http.StatusNotFound, Message: "user not found"}
+	ErrConflict            = &AppError{Code: http.StatusConflict, Message: "email already exists"}
+	ErrInternalServerError = &AppError{Code: http.StatusInternalServerError, Message: "internal server error"}
 )

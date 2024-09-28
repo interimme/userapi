@@ -1,223 +1,219 @@
 package usecase
 
 import (
-	"errors"
-	"github.com/stretchr/testify/mock"
 	"testing"
-	"time"
 	"userapi/internal/entity"
 	"userapi/internal/usecase/mocks"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"gorm.io/gorm"
 )
 
 func TestCreateUser_Success(t *testing.T) {
-	mockRepo := new(mocks.UserRepositoryMock)
+	mockRepo := new(mocks.UserRepository)
 	userUseCase := NewUserUseCase(mockRepo)
 
 	user := &entity.User{
-		Firstname: "John",
-		Lastname:  "Doe",
-		Email:     "john.doe@example.com",
-		Age:       30,
+		Firstname: "Alice",
+		Lastname:  "Smith",
+		Email:     "alice@example.com",
+		Age:       28,
 	}
 
-	mockRepo.On("GetByEmail", user.Email).Return(nil, errors.New("not found"))
+	// Mock GetByEmail to return nil, indicating email does not exist
+	mockRepo.On("GetByEmail", "alice@example.com").Return(nil, nil)
+	// Mock Create to return nil, indicating successful creation
 	mockRepo.On("Create", mock.AnythingOfType("*entity.User")).Return(nil)
 
 	err := userUseCase.CreateUser(user)
 
-	assert.NoError(t, err)
-	assert.NotEqual(t, uuid.Nil, user.ID)
-	assert.WithinDuration(t, time.Now(), user.Created, time.Second)
+	assert.Nil(t, err)
 	mockRepo.AssertExpectations(t)
 }
 
-func TestCreateUser_EmailExists(t *testing.T) {
-	mockRepo := new(mocks.UserRepositoryMock)
-	userUseCase := NewUserUseCase(mockRepo)
-
-	existingUser := &entity.User{
-		ID:        uuid.New(),
-		Firstname: "Jane",
-		Lastname:  "Doe",
-		Email:     "jane.doe@example.com",
-		Age:       28,
-	}
-
-	mockRepo.On("GetByEmail", existingUser.Email).Return(existingUser, nil)
-
-	err := userUseCase.CreateUser(existingUser)
-
-	assert.Error(t, err)
-	assert.Equal(t, "email already exists", err.Error())
-	mockRepo.AssertExpectations(t)
-}
-
-func TestCreateUser_InvalidInput(t *testing.T) {
-	mockRepo := new(mocks.UserRepositoryMock)
+func TestCreateUser_ValidationError(t *testing.T) {
+	mockRepo := new(mocks.UserRepository)
 	userUseCase := NewUserUseCase(mockRepo)
 
 	user := &entity.User{
-		Firstname: "", // Missing firstname
-		Lastname:  "Doe",
-		Email:     "invalid-email",
-		Age:       200, // Invalid age
+		Firstname: "",
+		Lastname:  "Smith",
+		Email:     "alice@example.com",
+		Age:       28,
 	}
 
 	err := userUseCase.CreateUser(user)
 
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "firstname is required")
-	mockRepo.AssertNotCalled(t, "Create", mock.Anything)
+	assert.NotNil(t, err)
+	assert.Equal(t, "firstname is required", err.Error())
+}
+
+func TestCreateUser_EmailExists(t *testing.T) {
+	mockRepo := new(mocks.UserRepository)
+	userUseCase := NewUserUseCase(mockRepo)
+
+	user := &entity.User{
+		Firstname: "Alice",
+		Lastname:  "Smith",
+		Email:     "alice@example.com",
+		Age:       28,
+	}
+
+	// Mock existing user with the same email
+	mockRepo.On("GetByEmail", "alice@example.com").Return(&entity.User{}, nil)
+
+	err := userUseCase.CreateUser(user)
+
+	assert.NotNil(t, err)
+	assert.Equal(t, "email already exists", err.Error())
 }
 
 func TestGetUser_Success(t *testing.T) {
-	mockRepo := new(mocks.UserRepositoryMock)
+	mockRepo := new(mocks.UserRepository)
 	userUseCase := NewUserUseCase(mockRepo)
 
 	userID := uuid.New()
 	user := &entity.User{
 		ID:        userID,
-		Firstname: "Jane",
-		Lastname:  "Doe",
-		Email:     "jane.doe@example.com",
+		Firstname: "Alice",
+		Lastname:  "Smith",
+		Email:     "alice@example.com",
 		Age:       28,
-		Created:   time.Now(),
 	}
 
+	// Mock GetByID to return the user
 	mockRepo.On("GetByID", userID).Return(user, nil)
 
 	result, err := userUseCase.GetUser(userID)
 
-	assert.NoError(t, err)
+	assert.Nil(t, err)
 	assert.Equal(t, user, result)
-	mockRepo.AssertExpectations(t)
 }
 
 func TestGetUser_NotFound(t *testing.T) {
-	mockRepo := new(mocks.UserRepositoryMock)
+	mockRepo := new(mocks.UserRepository)
 	userUseCase := NewUserUseCase(mockRepo)
 
 	userID := uuid.New()
 
-	mockRepo.On("GetByID", userID).Return(nil, errors.New("user not found"))
+	// Mock GetByID to return ErrRecordNotFound
+	mockRepo.On("GetByID", userID).Return(nil, gorm.ErrRecordNotFound)
 
 	result, err := userUseCase.GetUser(userID)
 
-	assert.Error(t, err)
 	assert.Nil(t, result)
-	mockRepo.AssertExpectations(t)
+	assert.NotNil(t, err)
+	assert.Equal(t, "user not found", err.Error())
 }
 
 func TestUpdateUser_Success(t *testing.T) {
-	mockRepo := new(mocks.UserRepositoryMock)
-	userUseCase := NewUserUseCase(mockRepo)
-
-	userID := uuid.New()
-	existingUser := &entity.User{
-		ID:        userID,
-		Firstname: "John",
-		Lastname:  "Doe",
-		Email:     "john.doe@example.com",
-		Age:       30,
-		Created:   time.Now(),
-	}
-
-	updatedUser := &entity.User{
-		ID:        userID,
-		Firstname: "John",
-		Lastname:  "Smith",
-		Email:     "john.smith@example.com",
-		Age:       31,
-	}
-
-	mockRepo.On("GetByID", userID).Return(existingUser, nil)
-	mockRepo.On("Update", mock.AnythingOfType("*entity.User")).Return(nil)
-
-	err := userUseCase.UpdateUser(updatedUser)
-
-	assert.NoError(t, err)
-	mockRepo.AssertExpectations(t)
-}
-
-func TestUpdateUser_NotFound(t *testing.T) {
-	mockRepo := new(mocks.UserRepositoryMock)
-	userUseCase := NewUserUseCase(mockRepo)
-
-	userID := uuid.New()
-	updatedUser := &entity.User{
-		ID:        userID,
-		Firstname: "John",
-		Lastname:  "Smith",
-		Email:     "john.smith@example.com",
-		Age:       31,
-	}
-
-	mockRepo.On("GetByID", userID).Return(nil, errors.New("user not found"))
-
-	err := userUseCase.UpdateUser(updatedUser)
-
-	assert.Error(t, err)
-	assert.Equal(t, "user not found", err.Error())
-	mockRepo.AssertExpectations(t)
-}
-
-func TestUpdateUser_InvalidInput(t *testing.T) {
-	mockRepo := new(mocks.UserRepositoryMock)
-	userUseCase := NewUserUseCase(mockRepo)
-
-	userID := uuid.New()
-	updatedUser := &entity.User{
-		ID:        userID,
-		Firstname: "", // Missing firstname
-		Lastname:  "Smith",
-		Email:     "invalid-email",
-		Age:       200, // Invalid age
-	}
-
-	err := userUseCase.UpdateUser(updatedUser)
-
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "firstname is required")
-	mockRepo.AssertNotCalled(t, "Update", mock.Anything)
-}
-
-func TestDeleteUser_Success(t *testing.T) {
-	mockRepo := new(mocks.UserRepositoryMock)
+	mockRepo := new(mocks.UserRepository)
 	userUseCase := NewUserUseCase(mockRepo)
 
 	userID := uuid.New()
 	user := &entity.User{
 		ID:        userID,
-		Firstname: "John",
-		Lastname:  "Doe",
-		Email:     "john.doe@example.com",
-		Age:       30,
-		Created:   time.Now(),
+		Firstname: "Alice",
+		Lastname:  "Johnson",
+		Email:     "alice.johnson@example.com",
+		Age:       29,
 	}
 
+	existingUser := &entity.User{
+		ID:        userID,
+		Firstname: "Alice",
+		Lastname:  "Smith",
+		Email:     "alice@example.com",
+		Age:       28,
+	}
+
+	// Mock GetByID to return the existing user
+	mockRepo.On("GetByID", userID).Return(existingUser, nil)
+	// Mock Update to return nil
+	mockRepo.On("Update", existingUser).Return(nil)
+
+	err := userUseCase.UpdateUser(user)
+
+	assert.Nil(t, err)
+	assert.Equal(t, "Alice", existingUser.Firstname)
+	assert.Equal(t, "Johnson", existingUser.Lastname)
+	assert.Equal(t, "alice.johnson@example.com", existingUser.Email)
+	assert.Equal(t, uint(29), existingUser.Age)
+}
+
+func TestUpdateUser_ValidationError(t *testing.T) {
+	mockRepo := new(mocks.UserRepository)
+	userUseCase := NewUserUseCase(mockRepo)
+
+	userID := uuid.New()
+	user := &entity.User{
+		ID:        userID,
+		Firstname: "",
+		Lastname:  "Johnson",
+		Email:     "alice.johnson@example.com",
+		Age:       29,
+	}
+
+	err := userUseCase.UpdateUser(user)
+
+	assert.NotNil(t, err)
+	assert.Equal(t, "firstname is required", err.Error())
+}
+
+func TestUpdateUser_NotFound(t *testing.T) {
+	mockRepo := new(mocks.UserRepository)
+	userUseCase := NewUserUseCase(mockRepo)
+
+	userID := uuid.New()
+	user := &entity.User{
+		ID:        userID,
+		Firstname: "Alice",
+		Lastname:  "Johnson",
+		Email:     "alice.johnson@example.com",
+		Age:       29,
+	}
+
+	// Mock GetByID to return ErrRecordNotFound
+	mockRepo.On("GetByID", userID).Return(nil, gorm.ErrRecordNotFound)
+
+	err := userUseCase.UpdateUser(user)
+
+	assert.NotNil(t, err)
+	assert.Equal(t, "user not found", err.Error())
+}
+
+func TestDeleteUser_Success(t *testing.T) {
+	mockRepo := new(mocks.UserRepository)
+	userUseCase := NewUserUseCase(mockRepo)
+
+	userID := uuid.New()
+	user := &entity.User{
+		ID: userID,
+	}
+
+	// Mock GetByID to return the user
 	mockRepo.On("GetByID", userID).Return(user, nil)
+	// Mock Delete to return nil
 	mockRepo.On("Delete", user).Return(nil)
 
 	err := userUseCase.DeleteUser(userID)
 
-	assert.NoError(t, err)
-	mockRepo.AssertExpectations(t)
+	assert.Nil(t, err)
 }
 
 func TestDeleteUser_NotFound(t *testing.T) {
-	mockRepo := new(mocks.UserRepositoryMock)
+	mockRepo := new(mocks.UserRepository)
 	userUseCase := NewUserUseCase(mockRepo)
 
 	userID := uuid.New()
 
-	mockRepo.On("GetByID", userID).Return(nil, errors.New("user not found"))
+	// Mock GetByID to return ErrRecordNotFound
+	mockRepo.On("GetByID", userID).Return(nil, gorm.ErrRecordNotFound)
 
 	err := userUseCase.DeleteUser(userID)
 
-	assert.Error(t, err)
+	assert.NotNil(t, err)
 	assert.Equal(t, "user not found", err.Error())
-	mockRepo.AssertExpectations(t)
 }

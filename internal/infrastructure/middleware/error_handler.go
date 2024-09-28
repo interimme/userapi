@@ -22,6 +22,6 @@ func ErrorHandler(c *gin.Context) {
 		}
 
 		// For other errors, return a generic 500 error
-		c.JSON(500, gin.H{"error": "Internal server error"})
+		c.JSON(500, gin.H{"error": "internal server error"})
 	}
 }

@@ -7,30 +7,30 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// UserUseCaseMock is a mock implementation of UserUseCase
-type UserUseCaseMock struct {
+// UserUseCase is a mock type for the UserUseCase interface
+type UserUseCase struct {
 	mock.Mock
 }
 
-func (m *UserUseCaseMock) CreateUser(user *entity.User) error {
+func (m *UserUseCase) CreateUser(user *entity.User) error {
 	args := m.Called(user)
 	return args.Error(0)
 }
 
-func (m *UserUseCaseMock) GetUser(id uuid.UUID) (*entity.User, error) {
+func (m *UserUseCase) GetUser(id uuid.UUID) (*entity.User, error) {
 	args := m.Called(id)
-	if result := args.Get(0); result != nil {
-		return result.(*entity.User), args.Error(1)
+	if user, ok := args.Get(0).(*entity.User); ok {
+		return user, args.Error(1)
 	}
 	return nil, args.Error(1)
 }
 
-func (m *UserUseCaseMock) UpdateUser(user *entity.User) error {
+func (m *UserUseCase) UpdateUser(user *entity.User) error {
 	args := m.Called(user)
 	return args.Error(0)
 }
 
-func (m *UserUseCaseMock) DeleteUser(id uuid.UUID) error {
+func (m *UserUseCase) DeleteUser(id uuid.UUID) error {
 	args := m.Called(id)
 	return args.Error(0)
 }

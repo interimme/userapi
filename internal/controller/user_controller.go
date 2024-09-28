@@ -1,11 +1,12 @@
 package controller
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"userapi/internal/entity"
 	appErrors "userapi/internal/errors"
 	"userapi/internal/usecase"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // UserController handles HTTP requests related to users
@@ -26,7 +27,7 @@ func (ctrl *UserController) CreateUser(c *gin.Context) {
 
 	// Bind JSON input to the user entity
 	if err := c.ShouldBindJSON(&user); err != nil {
-		c.Error(&appErrors.AppError{Code: 400, Message: err.Error()})
+		c.Error(&appErrors.AppError{Code: 400, Message: "invalid request"})
 		return
 	}
 
@@ -40,11 +41,12 @@ func (ctrl *UserController) CreateUser(c *gin.Context) {
 	c.JSON(201, user)
 }
 
+// GetUser handles fetching a user by ID
 func (ctrl *UserController) GetUser(c *gin.Context) {
 	idParam := c.Param("id")
 	userID, err := uuid.Parse(idParam)
 	if err != nil {
-		c.Error(&appErrors.AppError{Code: 400, Message: "Invalid UUID"})
+		c.Error(&appErrors.AppError{Code: 400, Message: "invalid uuid"})
 		return
 	}
 
@@ -57,19 +59,21 @@ func (ctrl *UserController) GetUser(c *gin.Context) {
 	c.JSON(200, user)
 }
 
+// UpdateUser handles updating an existing user
 func (ctrl *UserController) UpdateUser(c *gin.Context) {
 	idParam := c.Param("id")
 	userID, err := uuid.Parse(idParam)
 	if err != nil {
-		c.Error(&appErrors.AppError{Code: 400, Message: "Invalid UUID"})
+		c.Error(&appErrors.AppError{Code: 400, Message: "invalid uuid"})
 		return
 	}
 
 	var user entity.User
 	if err := c.ShouldBindJSON(&user); err != nil {
-		c.Error(&appErrors.AppError{Code: 400, Message: err.Error()})
+		c.Error(&appErrors.AppError{Code: 400, Message: "invalid request"})
 		return
 	}
+
 	user.ID = userID
 
 	if err := ctrl.UserUseCase.UpdateUser(&user); err != nil {
@@ -80,11 +84,12 @@ func (ctrl *UserController) UpdateUser(c *gin.Context) {
 	c.JSON(200, user)
 }
 
+// DeleteUser handles deleting a user by ID
 func (ctrl *UserController) DeleteUser(c *gin.Context) {
 	idParam := c.Param("id")
 	userID, err := uuid.Parse(idParam)
 	if err != nil {
-		c.Error(&appErrors.AppError{Code: 400, Message: "Invalid UUID"})
+		c.Error(&appErrors.AppError{Code: 400, Message: "invalid uuid"})
 		return
 	}
 
