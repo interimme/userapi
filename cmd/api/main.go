@@ -22,7 +22,7 @@ func run() error {
 		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
 		"db",       // DB_HOST
 		"postgres", // DB_USER
-		"postgres", // DB_PASSWORD
+		"postgres", // DB_PASSWORD TODO: Handle sensitive information using Docker Secretes or Set environment variables in your CI/CD tool
 		"usersdb",  // DB_NAME
 		"5432",     // DB_PORT
 	)
