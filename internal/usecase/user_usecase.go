@@ -11,17 +11,20 @@ import (
 	"gorm.io/gorm"
 )
 
-type userUseCase struct {
+// UserUseCase struct implements the methods required by the controller's UserUseCase interface
+type UserUseCase struct {
 	repo UserRepository
 }
 
-func NewUserUseCase(repo UserRepository) UserUseCase {
-	return &userUseCase{
+// NewUserUseCase creates a new instance of UserUseCase
+func NewUserUseCase(repo UserRepository) *UserUseCase {
+	return &UserUseCase{
 		repo: repo,
 	}
 }
 
-func (uc *userUseCase) CreateUser(user *entity.User) error {
+// CreateUser creates a new user
+func (uc *UserUseCase) CreateUser(user *entity.User) error {
 	user.ID = uuid.New()
 	user.Created = time.Now().UTC()
 
@@ -44,7 +47,8 @@ func (uc *userUseCase) CreateUser(user *entity.User) error {
 	return nil
 }
 
-func (uc *userUseCase) GetUser(id uuid.UUID) (*entity.User, error) {
+// GetUser retrieves a user by ID
+func (uc *UserUseCase) GetUser(id uuid.UUID) (*entity.User, error) {
 	user, err := uc.repo.GetByID(id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -55,7 +59,8 @@ func (uc *userUseCase) GetUser(id uuid.UUID) (*entity.User, error) {
 	return user, nil
 }
 
-func (uc *userUseCase) UpdateUser(user *entity.User) error {
+// UpdateUser updates an existing user
+func (uc *UserUseCase) UpdateUser(user *entity.User) error {
 	// Validate the user entity
 	if err := user.Validate(); err != nil {
 		return &appErrors.AppError{Code: http.StatusBadRequest, Message: err.Error()}
@@ -84,7 +89,8 @@ func (uc *userUseCase) UpdateUser(user *entity.User) error {
 	return nil
 }
 
-func (uc *userUseCase) DeleteUser(id uuid.UUID) error {
+// DeleteUser deletes a user by ID
+func (uc *UserUseCase) DeleteUser(id uuid.UUID) error {
 	user, err := uc.repo.GetByID(id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

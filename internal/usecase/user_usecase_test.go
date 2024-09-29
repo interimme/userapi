@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
 )
 
@@ -29,7 +30,7 @@ func TestCreateUser_Success(t *testing.T) {
 
 	err := userUseCase.CreateUser(user)
 
-	assert.Nil(t, err)
+	require.NoError(t, err, "Expected no error when creating user")
 	mockRepo.AssertExpectations(t)
 }
 
@@ -46,7 +47,7 @@ func TestCreateUser_ValidationError(t *testing.T) {
 
 	err := userUseCase.CreateUser(user)
 
-	assert.NotNil(t, err)
+	require.Error(t, err, "Expected an error due to validation failure")
 	assert.Equal(t, "firstname is required", err.Error())
 }
 
@@ -66,7 +67,7 @@ func TestCreateUser_EmailExists(t *testing.T) {
 
 	err := userUseCase.CreateUser(user)
 
-	assert.NotNil(t, err)
+	require.Error(t, err, "Expected an error due to existing email")
 	assert.Equal(t, "email already exists", err.Error())
 }
 
@@ -88,7 +89,7 @@ func TestGetUser_Success(t *testing.T) {
 
 	result, err := userUseCase.GetUser(userID)
 
-	assert.Nil(t, err)
+	require.NoError(t, err, "Expected no error when getting user")
 	assert.Equal(t, user, result)
 }
 
@@ -103,8 +104,8 @@ func TestGetUser_NotFound(t *testing.T) {
 
 	result, err := userUseCase.GetUser(userID)
 
-	assert.Nil(t, result)
-	assert.NotNil(t, err)
+	require.Error(t, err, "Expected an error due to user not found")
+	require.Nil(t, result)
 	assert.Equal(t, "user not found", err.Error())
 }
 
@@ -136,7 +137,7 @@ func TestUpdateUser_Success(t *testing.T) {
 
 	err := userUseCase.UpdateUser(user)
 
-	assert.Nil(t, err)
+	require.NoError(t, err, "Expected no error when updating user")
 	assert.Equal(t, "Alice", existingUser.Firstname)
 	assert.Equal(t, "Johnson", existingUser.Lastname)
 	assert.Equal(t, "alice.johnson@example.com", existingUser.Email)
@@ -158,7 +159,7 @@ func TestUpdateUser_ValidationError(t *testing.T) {
 
 	err := userUseCase.UpdateUser(user)
 
-	assert.NotNil(t, err)
+	require.Error(t, err, "Expected an error due to validation failure")
 	assert.Equal(t, "firstname is required", err.Error())
 }
 
@@ -180,7 +181,7 @@ func TestUpdateUser_NotFound(t *testing.T) {
 
 	err := userUseCase.UpdateUser(user)
 
-	assert.NotNil(t, err)
+	require.Error(t, err, "Expected an error due to user not found")
 	assert.Equal(t, "user not found", err.Error())
 }
 
@@ -200,7 +201,7 @@ func TestDeleteUser_Success(t *testing.T) {
 
 	err := userUseCase.DeleteUser(userID)
 
-	assert.Nil(t, err)
+	require.NoError(t, err, "Expected no error when deleting user")
 }
 
 func TestDeleteUser_NotFound(t *testing.T) {
@@ -214,6 +215,6 @@ func TestDeleteUser_NotFound(t *testing.T) {
 
 	err := userUseCase.DeleteUser(userID)
 
-	assert.NotNil(t, err)
+	require.Error(t, err, "Expected an error due to user not found")
 	assert.Equal(t, "user not found", err.Error())
 }
