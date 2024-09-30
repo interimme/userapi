@@ -1,4 +1,4 @@
-module userapi
+module github.com/interimme/userapi
 
 go 1.23
 

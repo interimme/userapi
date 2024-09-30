@@ -1,7 +1,7 @@
 package mocks
 
 import (
-	"userapi/internal/entity"
+	"github.com/interimme/userapi/internal/entity"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"

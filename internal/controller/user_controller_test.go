@@ -3,13 +3,13 @@ package controller
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/interimme/userapi/internal/controller/mocks"
+	"github.com/interimme/userapi/internal/entity"
+	appErrors "github.com/interimme/userapi/internal/errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
-	"userapi/internal/controller/mocks"
-	"userapi/internal/entity"
-	appErrors "userapi/internal/errors"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"

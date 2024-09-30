@@ -2,10 +2,10 @@ package usecase
 
 import (
 	"errors"
+	"github.com/interimme/userapi/internal/entity"
+	appErrors "github.com/interimme/userapi/internal/errors"
 	"net/http"
 	"time"
-	"userapi/internal/entity"
-	appErrors "userapi/internal/errors"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"

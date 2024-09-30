@@ -1,9 +1,9 @@
 package usecase
 
 import (
+	"github.com/interimme/userapi/internal/entity"
+	"github.com/interimme/userapi/internal/usecase/mocks"
 	"testing"
-	"userapi/internal/entity"
-	"userapi/internal/usecase/mocks"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"

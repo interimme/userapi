@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
+	"github.com/interimme/userapi/internal/controller"
+	"github.com/interimme/userapi/internal/infrastructure"
+	"github.com/interimme/userapi/internal/infrastructure/db"
+	"github.com/interimme/userapi/internal/infrastructure/persistence"
+	"github.com/interimme/userapi/internal/usecase"
 	"log"
-	"userapi/internal/controller"
-	"userapi/internal/infrastructure"
-	"userapi/internal/infrastructure/db"
-	"userapi/internal/infrastructure/persistence"
-	"userapi/internal/usecase"
 )
 
 func main() {

@@ -1,7 +1,7 @@
 package infrastructure
 
 import (
-	"userapi/internal/controller"
+	"github.com/interimme/userapi/internal/controller"
 
 	"github.com/gin-gonic/gin"
 )

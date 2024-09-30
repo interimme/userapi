@@ -1,9 +1,9 @@
 package persistence
 
 import (
+	"github.com/interimme/userapi/internal/entity"
+	"github.com/interimme/userapi/internal/usecase"
 	"time"
-	"userapi/internal/entity"
-	"userapi/internal/usecase"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"

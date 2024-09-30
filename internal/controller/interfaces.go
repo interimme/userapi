@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"userapi/internal/entity"
+	"github.com/interimme/userapi/internal/entity"
 
 	"github.com/google/uuid"
 )

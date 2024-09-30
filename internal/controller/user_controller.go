@@ -2,9 +2,9 @@ package controller
 
 import (
 	"errors"
+	"github.com/interimme/userapi/internal/entity"
+	appErrors "github.com/interimme/userapi/internal/errors"
 	"net/http"
-	"userapi/internal/entity"
-	appErrors "userapi/internal/errors"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
