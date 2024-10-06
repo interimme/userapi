@@ -2,8 +2,8 @@ package usecase
 
 import (
 	"errors"
+	appErrors "github.com/interimme/userapi/internal/apperrors"
 	"github.com/interimme/userapi/internal/entity"
-	appErrors "github.com/interimme/userapi/internal/errors"
 	"net/http"
 	"time"
 

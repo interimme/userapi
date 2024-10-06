@@ -23,8 +23,8 @@ WORKDIR /
 # Copy the built binary from the builder stage
 COPY --from=builder /userapi /userapi
 
-# Expose the application port
-EXPOSE 8080
+# Expose the application ports
+EXPOSE 8000 8080 9090
 
 # Command to run the application
 CMD ["/userapi"]

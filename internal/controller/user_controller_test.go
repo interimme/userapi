@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"github.com/interimme/userapi/internal/controller/mocks"
 	"github.com/interimme/userapi/internal/entity"
-	appErrors "github.com/interimme/userapi/internal/errors"
+	appErrors "github.com/interimme/userapi/internal/apperrors"
 	"net/http"
 	"net/http/httptest"
 	"strings"

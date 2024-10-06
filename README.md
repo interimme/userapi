@@ -232,7 +232,7 @@ curl -X DELETE http://localhost:8080/user/{user-id}
   func ErrorHandler(c *gin.Context) {
       c.Next() // Execute the handlers
 
-      // Check if any errors were set during the request
+      // Check if any apperrors were set during the request
       if len(c.Errors) > 0 {
           // Retrieve the last error
           err := c.Errors.Last().Err
@@ -243,7 +243,7 @@ curl -X DELETE http://localhost:8080/user/{user-id}
               return
           }
 
-          // For other errors, return a generic 500 error
+          // For other apperrors, return a generic 500 error
           c.JSON(500, gin.H{"error": "Internal server error"})
       }
   }

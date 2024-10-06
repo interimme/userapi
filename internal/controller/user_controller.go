@@ -2,8 +2,8 @@ package controller
 
 import (
 	"errors"
+	appErrors "github.com/interimme/userapi/internal/apperrors"
 	"github.com/interimme/userapi/internal/entity"
-	appErrors "github.com/interimme/userapi/internal/errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -35,7 +35,7 @@ func (ctrl *UserController) CreateUser(c *gin.Context) {
 	// Call the use case to create the user
 	if err := ctrl.UserUseCase.CreateUser(&user); err != nil {
 		if appErr, ok := err.(*appErrors.AppError); ok {
-			c.JSON(appErr.Code, gin.H{"error": appErr.Message})
+			c.JSON(int(appErr.Code), gin.H{"error": appErr.Message})
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
@@ -91,7 +91,7 @@ func (ctrl *UserController) UpdateUser(c *gin.Context) {
 			return
 		}
 		if appErr, ok := err.(*appErrors.AppError); ok {
-			c.JSON(appErr.Code, gin.H{"error": appErr.Message})
+			c.JSON(int(appErr.Code), gin.H{"error": appErr.Message})
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})

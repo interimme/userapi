@@ -2,9 +2,12 @@ services:
   api:
     build: .
     ports:
-      - "8080:8080"
+      - "8000:8000"  # Gin HTTP server
+      - "8080:8080"  # gRPC-Gateway HTTP server
+      - "9090:9090"  # gRPC server
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       - DB_HOST=db
       - DB_USER=postgres
@@ -20,6 +23,11 @@ services:
       - POSTGRES_DB=usersdb
     volumes:
       - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   db_data:
