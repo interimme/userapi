@@ -14,6 +14,7 @@ import (
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 
+	"github.com/interimme/userapi/internal/config"
 	"github.com/interimme/userapi/internal/controller"
 	"github.com/interimme/userapi/internal/grpcserver"
 	"github.com/interimme/userapi/internal/infrastructure"
@@ -32,14 +33,17 @@ func main() {
 }
 
 func run() error {
+	// Load configuration
+	cfg := config.Init()
+
 	// Database connection string
 	dsn := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
-		"db",       // DB_HOST
-		"postgres", // DB_USER
-		"postgres", // DB_PASSWORD
-		"usersdb",  // DB_NAME
-		"5432",     // DB_PORT
+		"host=%s user=%s password=%s dbname=%s port=%d sslmode=disable TimeZone=UTC",
+		cfg.Database.Host,
+		cfg.Database.User,
+		cfg.Database.Password,
+		cfg.Database.Name,
+		cfg.Database.Port,
 	)
 
 	// Connect to the database
@@ -74,7 +78,7 @@ func run() error {
 	router := infrastructure.NewRouter(userController)
 
 	// Set up gRPC server
-	grpcAddr := ":9090" // Define your gRPC port
+	grpcAddr := fmt.Sprintf(":%d", cfg.Server.GrpcPort)
 	grpcServer := grpc.NewServer()
 	grpcSrv := grpcserver.NewServer(userUseCase)
 	userapi.RegisterUserServiceServer(grpcServer, grpcSrv)
@@ -100,7 +104,7 @@ func run() error {
 	}
 
 	// Set up HTTP server for gRPC-Gateway
-	httpAddr := ":8080" // HTTP gateway port
+	httpAddr := fmt.Sprintf(":%d", cfg.Server.HttpPort)
 	httpServer := &http.Server{
 		Addr:    httpAddr,
 		Handler: gwMux,
@@ -108,7 +112,7 @@ func run() error {
 
 	// Create WaitGroup and channels for error handling
 	var wg sync.WaitGroup
-	errc := make(chan error, 3) // Buffer size 3 for gRPC, HTTP-Gateway, and Gin
+	errc := make(chan error, 3)
 
 	// Start gRPC server
 	wg.Add(1)
@@ -134,7 +138,7 @@ func run() error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		ginAddr := ":8000"
+		ginAddr := fmt.Sprintf(":%d", cfg.Server.GinPort)
 		log.Printf("Gin HTTP server listening on %s", ginAddr)
 		if err := router.Run(ginAddr); err != nil {
 			errc <- fmt.Errorf("Gin HTTP server failed: %w", err)
@@ -157,15 +161,13 @@ func run() error {
 		if err := httpServer.Shutdown(shutdownCtx); err != nil {
 			log.Printf("HTTP gateway shutdown failed: %v", err)
 		}
-
-		// TODO: Graceful shutdown for Gin HTTP server
 	}()
 
-	// Wait for servers or apperrors
+	// Wait for servers or errors
 	select {
 	case err := <-errc:
 		return err
-	case <-time.After(time.Hour): // Placeholder to prevent blocking; replace as needed
+	case <-time.After(time.Hour): // Placeholder to prevent blocking
 	}
 
 	wg.Wait()
